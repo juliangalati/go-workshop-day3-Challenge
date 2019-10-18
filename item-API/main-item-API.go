@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-type JSON_default map[string]interface{}
+type JSON_generic map[string]interface{}
 
 type responseAPI struct {
-	Json       *JSON_default
+	Json       *JSON_generic
 	StatusCode int
 }
 
@@ -25,7 +25,7 @@ func main() {
 	// simple get item
 	r.GET("/show/:item_id", func(c *gin.Context) {
 		itemId := c.Param("item_id")
-		response := getItem(itemId)
+		response := getItemFull(itemId)
 		c.JSON(response.StatusCode, response.Json)
 	})
 

@@ -8,15 +8,30 @@ import (
 
 const CUSTOM_TIMEOUT = time.Duration(15 * time.Second)
 
-const MELI_SITE = "https://api.mercadolibre.com/"
+const MELI_BASE_SITE = "https://api.mercadolibre.com/"
 const MELI_ITEMS = "items/"
+const MELI_SITES = "sites/"
+const MELI_USERS = "users/"
+const MELI_CATEGORIES = "categories/"
 
 func generalServerError(err error) responseAPI {
-	return responseAPI{Json: &JSON_default{"message": "Server error, retry later!", "cause": err.Error()}, StatusCode: http.StatusInternalServerError}
+	return responseAPI{Json: &JSON_generic{"message": "Server error, retry later!", "cause": err.Error()}, StatusCode: http.StatusInternalServerError}
 }
 
 func getItem(itemId string) responseAPI {
-	return getJson(MELI_SITE + MELI_ITEMS + itemId)
+	return getJson(MELI_BASE_SITE + MELI_ITEMS + itemId)
+}
+
+func getSite(siteId string) responseAPI {
+	return getJson(MELI_BASE_SITE + MELI_SITES + siteId)
+}
+
+func getUser(userId string) responseAPI {
+	return getJson(MELI_BASE_SITE + MELI_USERS + userId)
+}
+
+func getCategory(categoryId string) responseAPI {
+	return getJson(MELI_BASE_SITE + MELI_CATEGORIES + categoryId)
 }
 
 func getJson(url string) responseAPI {
@@ -29,7 +44,7 @@ func getJson(url string) responseAPI {
 	}
 	defer resp.Body.Close()
 
-	var result JSON_default
+	var result JSON_generic
 
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
