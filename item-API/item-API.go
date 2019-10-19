@@ -52,7 +52,7 @@ var SITE = extraInformationIndex{
 	getterExtraInformation: getSite,
 }
 
-func getItemWithExtraInfo(itemId string, extras []extraInformationIndex) responseAPI {
+func GetItemWithExtraInfo(itemId string, extras []extraInformationIndex) responseAPI {
 	basicItemResponse := getItem(itemId)
 
 	// si se encontro el item, se completa
