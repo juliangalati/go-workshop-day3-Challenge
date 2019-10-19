@@ -60,7 +60,7 @@ func completeInformation(jsonItem *JSON_generic) (responseAPI, error) {
 	for i := 0; i < cantExtraInfo; i++ {
 		infoResponse := <-responseChan
 		if infoResponse.response.StatusCode == http.StatusOK {
-			addNewInformationToJson(jsonItem, infoResponse.index.key, infoResponse.response.Json)
+			replaceOldInformationWithNewInJson(jsonItem, infoResponse.index.keyId, infoResponse.index.key, infoResponse.response.Json)
 		} else {
 			// si un id estaba en el item y no se puede completar, falla el request entero (se considera un error)
 			return responseAPI{}, errors.New(fmt.Sprintf("Getting the %v failed with status: %v", infoResponse.index.key, infoResponse.response.StatusCode))
@@ -69,8 +69,9 @@ func completeInformation(jsonItem *JSON_generic) (responseAPI, error) {
 	return responseAPI{Json: jsonItem, StatusCode: http.StatusOK}, nil
 }
 
-func addNewInformationToJson(jsonItem *JSON_generic, aKey string, aValue *JSON_generic) {
-	(*jsonItem)[aKey] = *aValue
+func replaceOldInformationWithNewInJson(jsonItem *JSON_generic, oldKey string, newKey string, aValue *JSON_generic) {
+	delete(*jsonItem, oldKey)
+	(*jsonItem)[newKey] = *aValue
 }
 
 func getExtraInformationIndexes(jsonItem *JSON_generic) (extraInformationIndexes []extraInformationIndex) {
