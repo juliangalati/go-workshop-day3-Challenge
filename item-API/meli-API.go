@@ -40,6 +40,7 @@ func getJson(url string) responseAPI {
 	resp, err := httpClient.Get(url)
 
 	if err != nil {
+		// TODO: retry a few times
 		return generalServerError(err)
 	}
 	defer resp.Body.Close()
