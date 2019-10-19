@@ -26,9 +26,13 @@ $ go run .
 ### Ejemplos:
 ##### test service
 ```sh
-localhost:8080/ping
+GET: localhost:8080/ping
 ```
 ##### respuesta full
 ```sh
-localhost:8080/show/MLA726125948
+GET: localhost:8080/show/MLA726125948
+```
+##### con querystring (respuesta solo con seller y category)
+```sh
+GET: localhost:8080/show/ MLA726125948 ?attributes=seller,category
 ```
