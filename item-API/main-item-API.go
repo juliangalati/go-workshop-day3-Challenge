@@ -25,7 +25,7 @@ func main() {
 	// simple get item
 	r.GET("/show/:item_id", func(c *gin.Context) {
 		itemId := c.Param("item_id")
-		response := getItemFull(itemId)
+		response := getItemWithExtraInfo(itemId, []extraInformationIndex{CATEGORY, SELLER, SITE})
 		c.JSON(response.StatusCode, response.Json)
 	})
 

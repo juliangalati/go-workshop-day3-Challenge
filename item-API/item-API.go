@@ -7,17 +7,22 @@ import (
 	"strconv"
 )
 
-// cual es la key y id de la info extra en el json original, con key se debe agregar la info y como se obtiene
+// cual es la key de la info extra en el json original, con key se debe agregar la info y como se obtiene
 type extraInformationIndex struct {
 	keyId                  string
-	id                     string
 	key                    string
 	getterExtraInformation func(id string) responseAPI
 }
 
+// cual es el id de la info extra y cual es su index
+type extraInformationId struct {
+	index extraInformationIndex
+	id    string
+}
+
 //la respuesta de la API al tratar de obtener la info extra
 type extraInformationAPIResponse struct {
-	index    extraInformationIndex
+	infoId   extraInformationId
 	response responseAPI
 }
 
@@ -29,12 +34,30 @@ const KEY_SELLER_ID = KEY_SELLER + _ID
 const KEY_SITE = "site"
 const KEY_SITE_ID = KEY_SITE + _ID
 
-func getItemFull(itemId string) responseAPI {
+var SELLER = extraInformationIndex{
+	keyId:                  KEY_SELLER_ID,
+	key:                    KEY_SELLER,
+	getterExtraInformation: getUser,
+}
+
+var CATEGORY = extraInformationIndex{
+	keyId:                  KEY_CATEGORY_ID,
+	key:                    KEY_CATEGORY,
+	getterExtraInformation: getCategory,
+}
+
+var SITE = extraInformationIndex{
+	keyId:                  KEY_SITE_ID,
+	key:                    KEY_SITE,
+	getterExtraInformation: getSite,
+}
+
+func getItemWithExtraInfo(itemId string, extras []extraInformationIndex) responseAPI {
 	basicItemResponse := getItem(itemId)
 
+	// si se encontro el item, se completa
 	if basicItemResponse.StatusCode == http.StatusOK {
-		// si se encontro el item, se completa
-		response, err := completeInformation(basicItemResponse.Json)
+		response, err := completeInformation(basicItemResponse.Json, extras)
 		if err != nil {
 			return generalServerError(err)
 		} else {
@@ -45,25 +68,25 @@ func getItemFull(itemId string) responseAPI {
 	}
 }
 
-func completeInformation(jsonItem *JSON_generic) (responseAPI, error) {
+func completeInformation(jsonItem *JSON_generic, extras []extraInformationIndex) (responseAPI, error) {
 	// solo se intenta completar la info extra cuyo id estaba en el item (no se considera un error que falte alguno)
-	extraInformationIndexes := getExtraInformationIndexes(jsonItem)
-	cantExtraInfo := len(extraInformationIndexes)
+	extraInformationIds := getExtraInformationIds(jsonItem, extras)
+	cantExtraInfo := len(extraInformationIds)
 	responseChan := make(chan extraInformationAPIResponse, cantExtraInfo)
 
-	for _, extraInfo := range extraInformationIndexes {
-		go func(extraInfoIndex extraInformationIndex) {
-			responseChan <- extraInformationAPIResponse{index: extraInfoIndex, response: extraInfoIndex.getterExtraInformation(extraInfoIndex.id)}
+	for _, extraInfo := range extraInformationIds {
+		go func(extraInfo extraInformationId) {
+			responseChan <- extraInformationAPIResponse{infoId: extraInfo, response: extraInfo.index.getterExtraInformation(extraInfo.id)}
 		}(extraInfo)
 	}
 
 	for i := 0; i < cantExtraInfo; i++ {
 		infoResponse := <-responseChan
 		if infoResponse.response.StatusCode == http.StatusOK {
-			replaceOldInformationWithNewInJson(jsonItem, infoResponse.index.keyId, infoResponse.index.key, infoResponse.response.Json)
+			replaceOldInformationWithNewInJson(jsonItem, infoResponse.infoId.index.keyId, infoResponse.infoId.index.key, infoResponse.response.Json)
 		} else {
 			// si un id estaba en el item y no se puede completar, falla el request entero (se considera un error)
-			return responseAPI{}, errors.New(fmt.Sprintf("Getting the %v failed with status: %v", infoResponse.index.key, infoResponse.response.StatusCode))
+			return responseAPI{}, errors.New(fmt.Sprintf("Getting the %v failed with status: %v", infoResponse.infoId.index.key, infoResponse.response.StatusCode))
 		}
 	}
 	return responseAPI{Json: jsonItem, StatusCode: http.StatusOK}, nil
@@ -74,17 +97,17 @@ func replaceOldInformationWithNewInJson(jsonItem *JSON_generic, oldKey string, n
 	(*jsonItem)[newKey] = *aValue
 }
 
-func getExtraInformationIndexes(jsonItem *JSON_generic) (extraInformationIndexes []extraInformationIndex) {
-	addExtraInformationIndex(KEY_CATEGORY_ID, KEY_CATEGORY, getCategory, jsonItem, &extraInformationIndexes)
-	addExtraInformationIndex(KEY_SELLER_ID, KEY_SELLER, getUser, jsonItem, &extraInformationIndexes)
-	addExtraInformationIndex(KEY_SITE_ID, KEY_SITE, getSite, jsonItem, &extraInformationIndexes)
+func getExtraInformationIds(jsonItem *JSON_generic, extras []extraInformationIndex) (extraInformationIds []extraInformationId) {
+	for _, infoIndex := range extras {
+		addExtraInformationId(infoIndex, jsonItem, &extraInformationIds)
+	}
 	return
 }
 
-func addExtraInformationIndex(keyId string, key string, getterInfo func(string) responseAPI, jsonItem *JSON_generic, extraInformationIds *[]extraInformationIndex) {
-	extraInfoId := getValueAsString(jsonItem, keyId)
+func addExtraInformationId(infoIndex extraInformationIndex, jsonItem *JSON_generic, extraInformationIds *[]extraInformationId) {
+	extraInfoId := getValueAsString(jsonItem, infoIndex.keyId)
 	if extraInfoId != "" {
-		*extraInformationIds = append(*extraInformationIds, extraInformationIndex{keyId: keyId, id: extraInfoId, key: key, getterExtraInformation: getterInfo})
+		*extraInformationIds = append(*extraInformationIds, extraInformationId{index: infoIndex, id: extraInfoId})
 	}
 }
 
