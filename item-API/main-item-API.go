@@ -9,7 +9,7 @@ import (
 type JSON_generic map[string]interface{}
 
 type responseAPI struct {
-	Json       *JSON_generic
+	Json       JSON_generic
 	StatusCode int
 }
 

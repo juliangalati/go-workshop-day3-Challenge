@@ -15,7 +15,7 @@ const MELI_USERS = "users/"
 const MELI_CATEGORIES = "categories/"
 
 func generalServerError(err error) responseAPI {
-	return responseAPI{Json: &JSON_generic{"message": "Server error, retry later!", "cause": err.Error()}, StatusCode: http.StatusInternalServerError}
+	return responseAPI{Json: JSON_generic{"message": "Server error, retry later!", "cause": err.Error()}, StatusCode: http.StatusInternalServerError}
 }
 
 func getItem(itemId string) responseAPI {
@@ -51,5 +51,5 @@ func getJson(url string) responseAPI {
 	if err != nil {
 		return generalServerError(err)
 	}
-	return responseAPI{Json: &result, StatusCode: resp.StatusCode}
+	return responseAPI{Json: result, StatusCode: resp.StatusCode}
 }

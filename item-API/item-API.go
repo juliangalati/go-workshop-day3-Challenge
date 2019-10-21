@@ -68,7 +68,7 @@ func GetItemWithExtraInfo(itemId string, extras []extraInformationIndex) respons
 	}
 }
 
-func completeInformation(jsonItem *JSON_generic, extras []extraInformationIndex) (responseAPI, error) {
+func completeInformation(jsonItem JSON_generic, extras []extraInformationIndex) (responseAPI, error) {
 	// solo se intenta completar la info extra cuyo id estaba en el item (no se considera un error que falte alguno)
 	extraInformationIds := getExtraInformationIds(jsonItem, extras)
 	cantExtraInfo := len(extraInformationIds)
@@ -92,27 +92,27 @@ func completeInformation(jsonItem *JSON_generic, extras []extraInformationIndex)
 	return responseAPI{Json: jsonItem, StatusCode: http.StatusOK}, nil
 }
 
-func replaceOldInformationWithNewInJson(jsonItem *JSON_generic, oldKey string, newKey string, aValue *JSON_generic) {
-	delete(*jsonItem, oldKey)
-	(*jsonItem)[newKey] = *aValue
+func replaceOldInformationWithNewInJson(jsonItem JSON_generic, oldKey string, newKey string, aValue JSON_generic) {
+	delete(jsonItem, oldKey)
+	jsonItem[newKey] = aValue
 }
 
-func getExtraInformationIds(jsonItem *JSON_generic, extras []extraInformationIndex) (extraInformationIds []extraInformationId) {
+func getExtraInformationIds(jsonItem JSON_generic, extras []extraInformationIndex) (extraInformationIds []extraInformationId) {
 	for _, infoIndex := range extras {
 		addExtraInformationId(infoIndex, jsonItem, &extraInformationIds)
 	}
 	return
 }
 
-func addExtraInformationId(infoIndex extraInformationIndex, jsonItem *JSON_generic, extraInformationIds *[]extraInformationId) {
+func addExtraInformationId(infoIndex extraInformationIndex, jsonItem JSON_generic, extraInformationIds *[]extraInformationId) {
 	extraInfoId := getValueAsString(jsonItem, infoIndex.keyId)
 	if extraInfoId != "" {
 		*extraInformationIds = append(*extraInformationIds, extraInformationId{index: infoIndex, id: extraInfoId})
 	}
 }
 
-func getValueAsString(json *JSON_generic, key string) string {
-	value := (*json)[key]
+func getValueAsString(json JSON_generic, key string) string {
+	value := json[key]
 
 	switch value.(type) {
 	case string:
